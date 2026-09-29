@@ -3,6 +3,42 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  const detailsDialog = document.getElementById("activity-details-dialog");
+  const detailsTitle = document.getElementById("activity-details-title");
+  const detailsDescription = document.getElementById("activity-details-description");
+  const detailsLocation = document.getElementById("activity-details-location");
+  const detailsSupervisor = document.getElementById("activity-details-supervisor");
+  const detailsCloseButton = document.getElementById("activity-details-close");
+  let detailsTrigger = null;
+
+  function openActivityDetails(name, details, trigger) {
+    detailsTitle.textContent = name;
+    detailsDescription.textContent = details.extended_description;
+    detailsLocation.textContent = details.location;
+    detailsSupervisor.textContent = details.supervisor;
+    detailsTrigger = trigger;
+    document.body.classList.add("dialog-open");
+    detailsDialog.showModal();
+    detailsCloseButton.focus();
+  }
+
+  function closeActivityDetails() {
+    detailsDialog.close();
+  }
+
+  detailsCloseButton.addEventListener("click", closeActivityDetails);
+
+  detailsDialog.addEventListener("click", (event) => {
+    if (event.target === detailsDialog) {
+      closeActivityDetails();
+    }
+  });
+
+  detailsDialog.addEventListener("close", () => {
+    document.body.classList.remove("dialog-open");
+    detailsTrigger?.focus();
+    detailsTrigger = null;
+  });
 
   // Function to fetch activities from API
   async function fetchActivities() {
@@ -18,6 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
       Object.entries(activities).forEach(([name, details]) => {
         const activityCard = document.createElement("div");
         activityCard.className = "activity-card";
+
+        activityCard.addEventListener("click", () => {
+          openActivityDetails(name, details, activityCard);
+        });
 
         const spotsLeft = details.max_participants - details.participants.length;
 
@@ -50,7 +90,8 @@ document.addEventListener("DOMContentLoaded", () => {
             deleteButton.innerHTML = "&times;";
             deleteButton.setAttribute("aria-label", `Unregister ${participant} from ${name}`);
             deleteButton.title = `Unregister ${participant}`;
-            deleteButton.addEventListener("click", async () => {
+            deleteButton.addEventListener("click", async (event) => {
+              event.stopPropagation();
               deleteButton.disabled = true;
 
               try {
@@ -92,6 +133,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         activityCard.appendChild(participantsSection);
+
+        const detailsButton = document.createElement("button");
+        detailsButton.type = "button";
+        detailsButton.className = "activity-details-trigger";
+        detailsButton.textContent = "View details";
+        detailsButton.setAttribute("aria-label", `View details for ${name}`);
+        detailsButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          openActivityDetails(name, details, detailsButton);
+        });
+        activityCard.appendChild(detailsButton);
 
         activitiesList.appendChild(activityCard);
 

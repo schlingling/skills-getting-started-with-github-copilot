@@ -27,6 +27,18 @@ def test_get_activities_returns_seeded_activities(client: TestClient):
     assert response.json()["Chess Club"] == expected_activity
 
 
+def test_get_activities_includes_details_for_every_activity(client: TestClient):
+    # Act
+    response = client.get("/activities")
+
+    # Assert
+    assert response.status_code == 200
+    for activity in response.json().values():
+        assert activity["extended_description"].strip()
+        assert activity["location"].strip()
+        assert activity["supervisor"].strip()
+
+
 def test_signup_adds_student_to_activity(client: TestClient):
     # Arrange
     activity_name = "Basketball Team"
